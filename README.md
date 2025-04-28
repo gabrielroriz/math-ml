@@ -1,3 +1,6 @@
+
+![Header](./assets/readme-header.png)
+
 # Math for Machine Learning and Data Science
 
 This repository was created to document and practice the knowledge acquired in the Math for Machine Learning and Data Science course (DeepLearning.AI / Coursera).

@@ -1,0 +1,9 @@
+numpy
+matplotlib
+pandas
+scipy
+scikit-learn
+jupyter
+pytest
+pytest-pythonpath
+tabulate

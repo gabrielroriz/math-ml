@@ -1,5 +1,6 @@
 import numpy as np
 from src.utils import print_array
+import matplotlib.pyplot as plt
 
 n_input_l = 2
 n_hidden_l = 4
@@ -8,7 +9,11 @@ n_output_l = 1
 def sigmoid(z):
     return 1 / (1 + (np.e ** -z))
 
+import numpy as np
+
 def initialize_parameters():
+    np.random.seed(0)  # Fixar a aleatoriedade para reprodutibilidade
+
     b1 = np.zeros((n_hidden_l, 1))
 
     W1 = np.random.randn(n_hidden_l, n_input_l) * 0.01
@@ -16,6 +21,7 @@ def initialize_parameters():
     b2 = np.zeros((n_output_l, 1))
 
     W2 = np.random.randn(n_output_l, n_hidden_l) * 0.01
+
     # b1:
     # +---+
     # | 0 |
@@ -34,13 +40,13 @@ def initialize_parameters():
 
     # W1:
     # +--------------+------------+
-    # |  0.000639755 | 0.00251784 |
+    # |  0.01764052  |  0.00400157 |
     # +--------------+------------+
-    # | -0.00170115  | 0.0141058  |
+    # |  0.00978738  |  0.02240893 |
     # +--------------+------------+
-    # |  0.00996568  | 0.00237355 |
+    # |  0.01867558  | -0.00977278 |
     # +--------------+------------+
-    # |  0.00850378  | 0.00579479 |
+    # |  0.00950088  | -0.00151357 |
     # +--------------+------------+
 
     # W1 is the weight matrix connecting the input layer to the hidden layer.
@@ -60,7 +66,7 @@ def initialize_parameters():
 
     # W2:
     # +------------+-------------+--------------+------------+
-    # | 0.00224718 | -0.00892212 | -3.02401e-05 | 0.00264288 |
+    # | 0.00103219 | 0.00410599   | 0.00144044   | 0.01454274 |
     # +------------+-------------+--------------+------------+
 
     # W2 is the weight matrix connecting the hidden layer to the output layer.
@@ -77,59 +83,89 @@ def initialize_parameters():
         "W2": W2
     }
 
-def forward_propagation(parameters, x1, x2):
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+def forward_propagation(parameters, x):
     b1 = parameters["b1"]
     W1 = parameters["W1"]
     b2 = parameters["b2"]
     W2 = parameters["W2"]
 
-    a1 = x1 * W1 + b1
-    a2 = x2 * W2 + b2
-    # a1:
-    # +--------------+------------+
-    # |  0.00639755  | 0.0251784  |
-    # +--------------+------------+
-    # | -0.0170115   | 0.141058   |
-    # +--------------+------------+
-    # |  0.0996568   | 0.0237355  |
-    # +--------------+------------+
-    # |  0.0850378   | 0.0579479  |
-    # +--------------+------------+
+    # First layer (input -> hidden)
+    Z1 = np.dot(W1, x) + b1
 
-    # Matrix a1 represents the activations computed at the hidden layer
-    # based on the weighted sum of the input feature x1 plus the bias b1.
-    # Each row (i) corresponds to a hidden neuron.
-    # Each column (j) corresponds to the contribution from a specific input feature (x1).
-    # 
-    # Formula: 
-    #   a1[i][j] = W1[i][j] * x1 + b1[i]
-    #
-    # These intermediate activations are not yet passed through a non-linear activation function.
-    # They are still in the linear pre-activation stage.
+    # Activation from hidden layer
+    A1 = sigmoid(Z1)
 
-    # a2:
-    # +-----------+------------+--------------+-----------+
-    # | 0.224718  | -0.892212  | -0.00302401  | 0.264288  |
-    # +-----------+------------+--------------+-----------+
+    # Second layer (hidden -> output)
+    Z2 = np.dot(W2, A1) + b2
 
-    # Matrix a2 represents the activations computed at the output layer
-    # based on the weighted sum of the second input feature x2 plus the bias b2.
-    # Each value in a2 corresponds to the raw contribution from a hidden neuron
-    # to the final output neuron.
-    #
-    # Formula:
-    #   a2[0][k] = W2[0][k] * x2 + b2[0]
-    #
-    # Like a1, these values are pre-activation outputs — 
-    # they should be passed through an activation function (e.g., sigmoid, softmax) 
-    # depending on the task (binary classification, multi-class classification, etc.).
+    # Activation from output layer
+    A2 = sigmoid(Z2)
 
-    print("\na1:")
-    print_array(a1)
-    print("\na2:")
-    print_array(a2)
+    # Z1:
+    # +--------------+
+    # |  value       |
+    # +--------------+
+    # Represents the pre-activation linear combination at the hidden layer
+    # before applying the non-linear activation function (sigmoid).
 
+    # A1:
+    # +--------------+
+    # | sigmoid(Z1)  |
+    # +--------------+
+    # Represents the output after applying the activation function
+    # for each hidden neuron.
 
+    # Z2:
+    # +--------------+
+    # |  value       |
+    # +--------------+
+    # Represents the pre-activation linear combination at the output layer
+    # before applying the final activation function (sigmoid).
+
+    # A2:
+    # +--------------+
+    # | sigmoid(Z2)  |
+    # +--------------+
+    # Represents the final prediction output (between 0 and 1).
+
+    print("\nZ1 (hidden pre-activation):")
+    print_array(Z1)
+    
+    print("\nA1 (hidden activation):")
+    print_array(A1)
+    
+    print("\nZ2 (output pre-activation):")
+    print_array(Z2)
+    
+    print("\nA2 (output activation):")
+    print_array(A2)
+
+    return A2
+
+def gen_dataset_xor():
+    np.random.seed(0)
+    
+    X = np.random.rand(200, 2) * 2 - 1  # [-1, 1]
+    Y = (X[:, 0] * X[:, 1] < 0).astype(int) # XOR
+
+    # Ploting
+
+    # class_0 = X[Y == 0]
+    # class_1 = X[Y == 1]
+    # plt.figure(figsize=(8, 6))
+    # plt.scatter(class_0[:, 0], class_0[:, 1], color='blue', label='Classe 0')
+    # plt.scatter(class_1[:, 0], class_1[:, 1], color='red', label='Classe 1')
+    # plt.title('Distribuição dos dados XOR com ruído')
+    # plt.xlabel('Feature 1')
+    # plt.ylabel('Feature 2')
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
+
+    return X, Y
 
 print("=== Inicialização dos Parâmetros ===\n")
 
@@ -145,4 +181,12 @@ print("\nW2:")
 print_array(parameters["W2"])
 
 print("\nforward_propagation:")
-forward_propagation(parameters, 10, 100)
+
+x = np.array([[10], [-100]])
+
+forward_propagation(parameters, x)
+
+X, Y = gen_dataset_xor()
+
+print(X.shape)
+print(Y.shape)

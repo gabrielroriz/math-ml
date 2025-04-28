@@ -3,7 +3,9 @@
 
 # Math for Machine Learning and Data Science
 
-This repository was created to document and practice the knowledge acquired in the Math for Machine Learning and Data Science course (DeepLearning.AI / Coursera).
+This repository was created to document and practice the knowledge acquired in the [Math for Machine Learning and Data Science](https://www.deeplearning.ai/courses/mathematics-for-machine-learning-and-data-science-specialization/) course (DeepLearning.AI / Coursera).
+
+The course covers essential topics such as linear algebra, calculus, probability, and statistics, with a focus on their practical application in real-world AI problems.
 
 ## Quickstart
 

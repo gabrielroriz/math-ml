@@ -76,6 +76,14 @@ def initialize_parameters():
     # when computing the final output.
     # These weights allow the model to combine the learned features from the hidden layer to predict the final result.
 
+    print_array(b1, ["Bias"], title="B1")
+
+    print_array(W1, [f"(X) Feature {i + 1}" for i in range(n_input_l)], [f"(N) Neuron 1-{i + 1}" for i in range(n_hidden_l)], title="W1")
+
+    print_array(b2, ["Bias hidden layer"], title="B2")
+    
+    print_array(W2, [f"(X) Feature {i + 1}" for i in range(n_hidden_l)], [f"(N) Neuron 2-{i + 1}" for i in range(n_output_l)], title="W2")
+
     return {
         "b1": b1, 
         "W1": W1, 
@@ -102,7 +110,7 @@ def forward_propagation(parameters, x):
     Z2 = np.dot(W2, A1) + b2
 
     # Activation from output layer
-    A2 = sigmoid(Z2)
+    Yhat = sigmoid(Z2)
 
     # Z1:
     # +--------------+
@@ -125,25 +133,25 @@ def forward_propagation(parameters, x):
     # Represents the pre-activation linear combination at the output layer
     # before applying the final activation function (sigmoid).
 
-    # A2:
+    # Ŷ:
     # +--------------+
     # | sigmoid(Z2)  |
     # +--------------+
     # Represents the final prediction output (between 0 and 1).
 
-    print("\nZ1 (hidden pre-activation):")
-    print_array(Z1)
-    
-    print("\nA1 (hidden activation):")
-    print_array(A1)
-    
-    print("\nZ2 (output pre-activation):")
-    print_array(Z2)
-    
-    print("\nA2 (output activation):")
-    print_array(A2)
+    print_array(Z1, title="Z1 (hidden pre-activation)")
+    print("\n")
 
-    return A2
+    print_array(A1, title="A1 (hidden activation)")
+    print("\n")
+    
+    print_array(Z2, title="Z2 (output pre-activation)")
+    print("\n")
+
+    print_array(Yhat, title="Yhat (output activation)")
+    print("\n")
+
+    return Yhat
 
 def gen_dataset_xor():
     np.random.seed(0)
@@ -167,26 +175,28 @@ def gen_dataset_xor():
 
     return X, Y
 
+def log_loss(y, yhat):
+    # L(y,ŷ) = (y * log(ŷ)) + ((1-y) * log(1-ŷ))
+    return y * np.log(yhat) + ((1 - y) * np.log(1 - yhat))
+
 print("=== Inicialização dos Parâmetros ===\n")
 
 parameters = initialize_parameters()
 
-print("b1:")
-print_array(parameters["b1"])
-print("\nW1:")
-print_array(parameters["W1"])
-print("\nb2:")
-print_array(parameters["b2"])
-print("\nW2:")
-print_array(parameters["W2"])
-
-print("\nforward_propagation:")
-
-x = np.array([[10], [-100]])
-
-forward_propagation(parameters, x)
+print("\n=== Forward Propagation ===\n")
 
 X, Y = gen_dataset_xor()
 
-print(X.shape)
-print(Y.shape)
+# First item
+x = np.array([[X[0][0]], [X[0][1]]])
+
+Yhat = forward_propagation(parameters, x)
+
+print(X[0])
+print(Yhat[0][0])
+# print(x)
+
+# print(X.shape)
+# print(Y.shape)
+# print(Y[0])
+# print(X[0])

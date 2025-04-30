@@ -322,9 +322,6 @@ def run():
 
     back_propagation(log_loss_array, X, Y, a1_arr, y_hat_arr, parameters)
 
-
-
-
     # print(f"X = {x_item}")
     # print(f"Y = {y_item}")
     # print(f"Ŷ = {y_hat[0][0]}")

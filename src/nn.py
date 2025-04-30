@@ -1,6 +1,6 @@
 import numpy as np
 from src.utils import print_array
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 n_input_l = 2
 n_hidden_l = 4
@@ -76,13 +76,37 @@ def initialize_parameters():
     # when computing the final output.
     # These weights allow the model to combine the learned features from the hidden layer to predict the final result.
 
-    print_array(b1, ["Bias"], title="B1")
+    print_array(b1, 
+                ["Bias 1"], 
+                [f"[l1] Neuron {i + 1}" for i in range(n_hidden_l)], 
+                title_table="B1 | Bias - Layer 1",
+                title_columns="From (bias):",
+                title_rows="To:",
+                )
 
-    print_array(W1, [f"(X) Feature {i + 1}" for i in range(n_input_l)], [f"(N) Neuron 1-{i + 1}" for i in range(n_hidden_l)], title="W1")
+    print_array(W1, 
+                [f"(X) Feature {i + 1}" for i in range(n_input_l)], 
+                [f"[l1] Neuron {i + 1}" for i in range(n_hidden_l)], 
+                title_table="W1 | Weights - Layer 1", 
+                title_columns="From (inputs):",
+                title_rows="To (neurons):", 
+                )
 
-    print_array(b2, ["Bias hidden layer"], title="B2")
+    print_array(b2,
+                ["Bias 2"], 
+                [f"[l2] Neuron {i + 1}" for i in range(n_output_l)],
+                title_table="B2 | Bias - Layer 2 (hidden)",
+                title_columns="From:",
+                title_rows="To:", 
+                )
     
-    print_array(W2, [f"(X) Feature {i + 1}" for i in range(n_hidden_l)], [f"(N) Neuron 2-{i + 1}" for i in range(n_output_l)], title="W2")
+    print_array(W2, 
+                [f"(X) Feature {i + 1}" for i in range(n_hidden_l)], 
+                [f"[l2] Neuron {i + 1}" for i in range(n_output_l)],
+                title_table="W2 | Weights - Layer 2 (hidden)", 
+                title_columns="From (inputs):",
+                title_rows="To (neurons):", 
+                )
 
     return {
         "b1": b1, 
@@ -139,16 +163,29 @@ def forward_propagation(parameters, x):
     # +--------------+
     # Represents the final prediction output (between 0 and 1).
 
-    print_array(Z1, title="Z1 (hidden pre-activation)")
+    print_array(
+        Z1, 
+        title_table="Z1 (hidden pre-activation)", 
+        row_headers=[f"[l2] Neuron {i + 1}" for i in range(n_hidden_l)],
+        headers=[f"Z"])
+    
     print("\n")
 
-    print_array(A1, title="A1 (hidden activation)")
+    print_array(
+        A1, 
+        title_table="A1 (hidden activation)", 
+        row_headers=[f"[l2] Neuron {i + 1}" for i in range(n_hidden_l)], 
+        headers=[f"sigmoid(Z)"])
     print("\n")
     
-    print_array(Z2, title="Z2 (output pre-activation)")
+    print_array(
+        Z2, 
+        title_table="Z2 (output pre-activation)")
     print("\n")
 
-    print_array(Yhat, title="Yhat (output activation)")
+    print_array(
+        Yhat, 
+        title_table="Yhat (output activation)")
     print("\n")
 
     return Yhat
@@ -175,9 +212,9 @@ def gen_dataset_xor():
 
     return X, Y
 
-def log_loss(y, yhat):
+def log_loss(y, y_hat):
     # L(y,ŷ) = (y * log(ŷ)) + ((1-y) * log(1-ŷ))
-    return y * np.log(yhat) + ((1 - y) * np.log(1 - yhat))
+    return -1 * (y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
 
 print("=== Inicialização dos Parâmetros ===\n")
 
@@ -188,13 +225,14 @@ print("\n=== Forward Propagation ===\n")
 X, Y = gen_dataset_xor()
 
 # First item
-x = np.array([[X[0][0]], [X[0][1]]])
+x_item = np.array([[X[0][0]], [X[0][1]]])
+y_item = Y[0]
+y_hat = forward_propagation(parameters, x_item)
 
-Yhat = forward_propagation(parameters, x)
-
-print(X[0])
-print(Yhat[0][0])
-# print(x)
+print(f"X = {x_item}")
+print(f"Y = {y_item}")
+print(f"Ŷ = {y_hat[0][0]}")
+print(f"Log-loss = {log_loss(y_item, y_hat[0][0])}")
 
 # print(X.shape)
 # print(Y.shape)

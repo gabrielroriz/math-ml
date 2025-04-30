@@ -1,4 +1,5 @@
 from tabulate import tabulate
+import inspect
 
 def print_array(
     arr,
@@ -59,3 +60,23 @@ def print_array(
 
     # 6. Imprime a tabela
     print(table_str)
+
+def print_vars(*args):
+    frame = inspect.currentframe().f_back
+    values = {name: frame.f_locals[name] for name in frame.f_code.co_varnames if name in frame.f_locals}
+
+    result = {}
+    for arg in args:
+        # Tenta encontrar o nome da variável original
+        for name, val in values.items():
+            if val is arg and name not in result:
+                result[name] = arg
+                break
+        else:
+            # Caso não consiga inferir o nome (ex: literal), coloca representação genérica
+            result[str(arg)] = arg
+
+    print("{")
+    for k, v in result.items():
+        print(f"    {k}: {repr(v)},")
+    print("}")

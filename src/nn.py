@@ -1,5 +1,5 @@
 import numpy as np
-from src.utils import print_array
+from src.utils import print_array, print_vars
 #import matplotlib.pyplot as plt
 
 n_input_l = 2
@@ -105,11 +105,11 @@ def initialize_parameters(show_print=False):
         #             )
         
         print_array(W2, 
-                    [f"Feature {i + 1}" for i in range(n_hidden_l)], 
-                    [f"[l2] Neuron {i + 1}" for i in range(n_output_l)],
+                    [f"[l2] Neuron {i + 1}" for i in range(n_hidden_l)], 
+                    [f"[l2] Output {i + 1}" for i in range(n_output_l)],
                     title_table="W2 | Weights - Layer 2 (hidden)", 
-                    title_columns="From (inputs):",
-                    title_rows="To (neurons):", 
+                    title_columns="From (neurons):",
+                    title_rows="To (output):", 
                     )
 
     return {
@@ -138,7 +138,7 @@ def forward_propagation(parameters, x, show_print=False):
     Z2 = np.dot(W2, A1) + b2
 
     # Activation from output layer
-    Yhat = sigmoid(Z2)
+    A2 = sigmoid(Z2)
 
     # Z1:
     # +--------------+
@@ -161,7 +161,7 @@ def forward_propagation(parameters, x, show_print=False):
     # Represents the pre-activation linear combination at the output layer
     # before applying the final activation function (sigmoid).
 
-    # Ŷ:
+    # A2:
     # +--------------+
     # | sigmoid(Z2)  |
     # +--------------+
@@ -191,15 +191,15 @@ def forward_propagation(parameters, x, show_print=False):
         print("\n")
 
         print_array(
-            Yhat, 
-            title_table="Yhat (output activation)")
+            A2, 
+            title_table="A2 (output activation)")
         print("\n")
 
     return {
-        "Yhat": Yhat,
         "Z2": Z2,
         "A1": A1,
         "Z1": Z1,
+        "A2": A2,
     }
 
 def gen_dataset_xor():
@@ -229,30 +229,31 @@ def log_loss(y, y_hat):
     # L(y,ŷ) = (y * log(ŷ)) + ((1-y) * log(1-ŷ))
     return -1 * (y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
 
-def back_propagation(log_loss_arr, X, Y, y_hat_array, parameters):
+def back_propagation(log_loss_arr, X, Y, a1_arr, y_hat_arr, parameters):
 
     def d_loss_d_yhat(y, y_hat):
         # -(y - Ŷ) / (Ŷ * (1- Ŷ))
         return (-1 * (y - y_hat)) / (y_hat * (1 - y_hat))
 
     def d_yhat_d_zL2(y_hat):
-        # Ŷ *(1-Ŷ)
+        # Sigmoid: Ŷ * (1-Ŷ)
         return y_hat * (1 - y_hat)
 
-    def d_zL2_d_aL1(aN):
-        # AL1n
-        return aN
+    def d_zL2_d_aL1(W2):
+        # W2
+        return W2
 
     def d_aL1_d_zL1(aN):
-        # An * (1 - An)
+        # Sigmoid: An * (1 - An)
         return aN * (1 - aN)
 
     def d_zL1_d_wN(xN):
         # xN
         return xN
 
-    def layer_1_gradient_formula(xN, aN, y, y_hat):
-        d_zL1_d_wN(xN) * d_aL1_d_zL1(aN) * d_zL2_d_aL1(aN) * d_yhat_d_zL2(y_hat) * d_loss_d_yhat(y, y_hat)
+    def layer_1_gradient_formula(x, aN, w2, y, y_hat):
+        gradient_formula_full = d_zL1_d_wN(x) * d_aL1_d_zL1(aN) * d_zL2_d_aL1(w2) * d_yhat_d_zL2(y_hat) * d_loss_d_yhat(y, y_hat)        
+        return gradient_formula_full
 
     # Layer 1 -> Output
 
@@ -274,19 +275,23 @@ def back_propagation(log_loss_arr, X, Y, y_hat_array, parameters):
         # First layer
         for i in range(n_input_l):
             for j in range(n_hidden_l):
-                W1 = parameters["W1"]
-                W2 = parameters["W2"]
-                weight = W1[j, i]
-                new_weight = weight - learning_rate * layer_1_gradient_formula(x, W2[i][j], y)
-                
-                print(f"[l1]W{i},{j} = {W1[j, i]}")
+                w1 = parameters["W1"][j, i]
+                w2 = parameters["W2"][0][j]
+                a1 = a1_arr[0][j]
+                gradient = layer_1_gradient_formula(x, a1, w2, y, y_hat)
+                new_weight = w1 - (learning_rate * gradient)
+                print_vars(x, w1, a1, w2, y, y_hat, learning_rate, gradient, new_weight)
+                parameters["W1"][j, i] = new_weight
+                # print(new_weight)
+                # print(f"[l1]W{i},{j} = {W1[j, i]}")
         
         # Hidden layer
         for i in range(n_hidden_l):
             for j in range(n_output_l):
-                print(f"[l2]W{i},{j}")
+                pass
+                # print(f"[l2]W{i},{j}")
 
-    gradient_descent(log_loss_arr[0], y_hat_array[0], X[0], Y[0], parameters)
+    gradient_descent(log_loss_arr[0], y_hat_arr[0], X[0][0], Y[0], parameters)
     
 
     # Layer 2 -> Output
@@ -304,18 +309,18 @@ def run():
 
     X, Y = gen_dataset_xor()
 
-    y_hat_array = [
-        forward_propagation(parameters, np.array([[x[0]], [x[1]]]))["Yhat"][0][0]
-        for x in X
-    ]
+    results = [forward_propagation(parameters, np.array([[x[0]], [x[1]]]), show_print=False) for x in X]
+
+    y_hat_arr = np.array([r["A2"][0][0] for r in results])
+
+    a1_arr = np.array([r["A1"].flatten() for r in results])
 
     log_loss_array = [
-        log_loss(y_item, y_hat_array[i])
+        log_loss(y_item, y_hat_arr[i])
         for i, y_item in enumerate(Y)
     ]
 
-    print(len(y_hat_array))
-    # back_propagation(log_loss_array, X, Y, y_hat_array, parameters)
+    back_propagation(log_loss_array, X, Y, a1_arr, y_hat_arr, parameters)
 
 
 

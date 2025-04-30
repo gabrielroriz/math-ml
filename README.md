@@ -32,3 +32,13 @@ python -m src.nn
 ```
 
 > Make sure you are in the project's root directory when running the command.
+
+### 4. Run tests
+
+To execute all unit tests, simply run:
+
+```bash
+pytest
+```
+
+> This will automatically discover and run all test files inside the tests/ folder.

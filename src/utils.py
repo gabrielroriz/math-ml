@@ -14,7 +14,7 @@ def print_array(
     # 1. Formata dados com coordenadas
     formatted_arr = []
     for i, row in enumerate(arr):
-        formatted_row = [f"(lin:{i},col:{j}) {value}" for j, value in enumerate(row)]
+        formatted_row = [f"({i},{j}) {value}" for j, value in enumerate(row)]
         if row_headers:
             formatted_row = [row_headers[i]] + formatted_row
         formatted_arr.append(formatted_row)

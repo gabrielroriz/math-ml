@@ -6,12 +6,14 @@ n_input_l = 2
 n_hidden_l = 4
 n_output_l = 1
 
+learning_rate = 0.1
+
 def sigmoid(z):
     return 1 / (1 + (np.e ** -z))
 
 import numpy as np
 
-def initialize_parameters():
+def initialize_parameters(show_print=False):
     np.random.seed(0)  # Fixar a aleatoriedade para reprodutibilidade
 
     b1 = np.zeros((n_hidden_l, 1))
@@ -76,37 +78,39 @@ def initialize_parameters():
     # when computing the final output.
     # These weights allow the model to combine the learned features from the hidden layer to predict the final result.
 
-    print_array(b1, 
-                ["Bias 1"], 
-                [f"[l1] Neuron {i + 1}" for i in range(n_hidden_l)], 
-                title_table="B1 | Bias - Layer 1",
-                title_columns="From (bias):",
-                title_rows="To:",
-                )
+    if show_print == True:
+        # print("=== Inicialização dos Parâmetros ===\n")
+        # print_array(b1, 
+        #             ["Bias 1"], 
+        #             [f"[l1] Neuron {i + 1}" for i in range(n_hidden_l)], 
+        #             title_table="B1 | Bias - Layer 1",
+        #             title_columns="From (bias):",
+        #             title_rows="To:",
+        #             )
 
-    print_array(W1, 
-                [f"(X) Feature {i + 1}" for i in range(n_input_l)], 
-                [f"[l1] Neuron {i + 1}" for i in range(n_hidden_l)], 
-                title_table="W1 | Weights - Layer 1", 
-                title_columns="From (inputs):",
-                title_rows="To (neurons):", 
-                )
+        print_array(W1, 
+                    [f"(X) Feature {i + 1}" for i in range(n_input_l)], 
+                    [f"[l1] Neuron {i + 1}" for i in range(n_hidden_l)], 
+                    title_table="W1 | Weights - Layer 1", 
+                    title_columns="From (inputs):",
+                    title_rows="To (neurons):", 
+                    )
 
-    print_array(b2,
-                ["Bias 2"], 
-                [f"[l2] Neuron {i + 1}" for i in range(n_output_l)],
-                title_table="B2 | Bias - Layer 2 (hidden)",
-                title_columns="From:",
-                title_rows="To:", 
-                )
-    
-    print_array(W2, 
-                [f"(X) Feature {i + 1}" for i in range(n_hidden_l)], 
-                [f"[l2] Neuron {i + 1}" for i in range(n_output_l)],
-                title_table="W2 | Weights - Layer 2 (hidden)", 
-                title_columns="From (inputs):",
-                title_rows="To (neurons):", 
-                )
+        # print_array(b2,
+        #             ["Bias 2"], 
+        #             [f"[l2] Neuron {i + 1}" for i in range(n_output_l)],
+        #             title_table="B2 | Bias - Layer 2 (hidden)",
+        #             title_columns="From:",
+        #             title_rows="To:", 
+        #             )
+        
+        print_array(W2, 
+                    [f"Feature {i + 1}" for i in range(n_hidden_l)], 
+                    [f"[l2] Neuron {i + 1}" for i in range(n_output_l)],
+                    title_table="W2 | Weights - Layer 2 (hidden)", 
+                    title_columns="From (inputs):",
+                    title_rows="To (neurons):", 
+                    )
 
     return {
         "b1": b1, 
@@ -118,7 +122,7 @@ def initialize_parameters():
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
-def forward_propagation(parameters, x):
+def forward_propagation(parameters, x, show_print=False):
     b1 = parameters["b1"]
     W1 = parameters["W1"]
     b2 = parameters["b2"]
@@ -163,37 +167,46 @@ def forward_propagation(parameters, x):
     # +--------------+
     # Represents the final prediction output (between 0 and 1).
 
-    print_array(
+    if show_print == True:
+        print("\n=== Forward Propagation ===\n")
+
+        print_array(
         Z1, 
         title_table="Z1 (hidden pre-activation)", 
         row_headers=[f"[l2] Neuron {i + 1}" for i in range(n_hidden_l)],
         headers=[f"Z"])
     
-    print("\n")
+        print("\n")
 
-    print_array(
-        A1, 
-        title_table="A1 (hidden activation)", 
-        row_headers=[f"[l2] Neuron {i + 1}" for i in range(n_hidden_l)], 
-        headers=[f"sigmoid(Z)"])
-    print("\n")
-    
-    print_array(
-        Z2, 
-        title_table="Z2 (output pre-activation)")
-    print("\n")
+        print_array(
+            A1, 
+            title_table="A1 (hidden activation)", 
+            row_headers=[f"[l2] Neuron {i + 1}" for i in range(n_hidden_l)], 
+            headers=[f"sigmoid(Z)"])
+        print("\n")
+        
+        print_array(
+            Z2, 
+            title_table="Z2 (output pre-activation)")
+        print("\n")
 
-    print_array(
-        Yhat, 
-        title_table="Yhat (output activation)")
-    print("\n")
+        print_array(
+            Yhat, 
+            title_table="Yhat (output activation)")
+        print("\n")
 
-    return Yhat
+    return {
+        "Yhat": Yhat,
+        "Z2": Z2,
+        "A1": A1,
+        "Z1": Z1,
+    }
 
 def gen_dataset_xor():
     np.random.seed(0)
+    n = 500
     
-    X = np.random.rand(200, 2) * 2 - 1  # [-1, 1]
+    X = np.random.rand(n, 2) * 2 - 1  # [-1, 1]
     Y = (X[:, 0] * X[:, 1] < 0).astype(int) # XOR
 
     # Ploting
@@ -216,25 +229,106 @@ def log_loss(y, y_hat):
     # L(y,ŷ) = (y * log(ŷ)) + ((1-y) * log(1-ŷ))
     return -1 * (y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
 
-print("=== Inicialização dos Parâmetros ===\n")
+def back_propagation(log_loss_arr, X, Y, y_hat_array, parameters):
 
-parameters = initialize_parameters()
+    def d_loss_d_yhat(y, y_hat):
+        # -(y - Ŷ) / (Ŷ * (1- Ŷ))
+        return (-1 * (y - y_hat)) / (y_hat * (1 - y_hat))
 
-print("\n=== Forward Propagation ===\n")
+    def d_yhat_d_zL2(y_hat):
+        # Ŷ *(1-Ŷ)
+        return y_hat * (1 - y_hat)
 
-X, Y = gen_dataset_xor()
+    def d_zL2_d_aL1(aN):
+        # AL1n
+        return aN
 
-# First item
-x_item = np.array([[X[0][0]], [X[0][1]]])
-y_item = Y[0]
-y_hat = forward_propagation(parameters, x_item)
+    def d_aL1_d_zL1(aN):
+        # An * (1 - An)
+        return aN * (1 - aN)
 
-print(f"X = {x_item}")
-print(f"Y = {y_item}")
-print(f"Ŷ = {y_hat[0][0]}")
-print(f"Log-loss = {log_loss(y_item, y_hat[0][0])}")
+    def d_zL1_d_wN(xN):
+        # xN
+        return xN
 
-# print(X.shape)
-# print(Y.shape)
-# print(Y[0])
-# print(X[0])
+    def layer_1_gradient_formula(xN, aN, y, y_hat):
+        d_zL1_d_wN(xN) * d_aL1_d_zL1(aN) * d_zL2_d_aL1(aN) * d_yhat_d_zL2(y_hat) * d_loss_d_yhat(y, y_hat)
+
+    # Layer 1 -> Output
+
+    # Gradient descent [1]w1,1
+    # Gradient descent [1]w1,2
+
+    # Gradient descent [1]w2,1
+    # Gradient descent [1]w2,2
+
+    # Gradient descent [1]w3,1
+    # Gradient descent [1]w3,2
+
+    # Gradient descent [1]w4,1
+    # Gradient descent [1]w4,2
+
+    # Gradient descent [1]b1
+
+    def gradient_descent(log_loss, y_hat, x, y, parameters):
+        # First layer
+        for i in range(n_input_l):
+            for j in range(n_hidden_l):
+                W1 = parameters["W1"]
+                W2 = parameters["W2"]
+                weight = W1[j, i]
+                new_weight = weight - learning_rate * layer_1_gradient_formula(x, W2[i][j], y)
+                
+                print(f"[l1]W{i},{j} = {W1[j, i]}")
+        
+        # Hidden layer
+        for i in range(n_hidden_l):
+            for j in range(n_output_l):
+                print(f"[l2]W{i},{j}")
+
+    gradient_descent(log_loss_arr[0], y_hat_array[0], X[0], Y[0], parameters)
+    
+
+    # Layer 2 -> Output
+
+    # Gradient Descent [2]w1,1
+    # Gradient Descent [2]w2,1
+    # Gradient Descent [2]w3,1
+    # Gradient Descent [2]w4,1
+    pass
+
+
+
+def run():
+    parameters = initialize_parameters(True)
+
+    X, Y = gen_dataset_xor()
+
+    y_hat_array = [
+        forward_propagation(parameters, np.array([[x[0]], [x[1]]]))["Yhat"][0][0]
+        for x in X
+    ]
+
+    log_loss_array = [
+        log_loss(y_item, y_hat_array[i])
+        for i, y_item in enumerate(Y)
+    ]
+
+    print(len(y_hat_array))
+    # back_propagation(log_loss_array, X, Y, y_hat_array, parameters)
+
+
+
+
+    # print(f"X = {x_item}")
+    # print(f"Y = {y_item}")
+    # print(f"Ŷ = {y_hat[0][0]}")
+    # print(f"Log-loss = {log_loss(y_item, y_hat[0][0])}")
+
+    # print(X.shape)
+    # print(Y.shape)
+    # print(Y[0])
+    # print(X[0])
+
+
+run()

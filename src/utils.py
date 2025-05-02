@@ -1,5 +1,6 @@
 from tabulate import tabulate
 import inspect
+import numpy as np
 
 def print_array(
     arr,
@@ -63,20 +64,41 @@ def print_array(
 
 def print_vars(*args):
     frame = inspect.currentframe().f_back
-    values = {name: frame.f_locals[name] for name in frame.f_code.co_varnames if name in frame.f_locals}
+    values = {
+        name: frame.f_locals[name]
+        for name in frame.f_code.co_varnames
+        if name in frame.f_locals
+    }
 
     result = {}
     for arg in args:
-        # Tenta encontrar o nome da variável original
         for name, val in values.items():
             if val is arg and name not in result:
                 result[name] = arg
                 break
         else:
-            # Caso não consiga inferir o nome (ex: literal), coloca representação genérica
             result[str(arg)] = arg
+
+    def format_value(v, indent=2):
+        pad = ' ' * indent
+        if isinstance(v, dict):
+            items = []
+            for k, val in v.items():
+                items.append(f'{pad}  "{k}": {format_value(val, indent + 2)}')
+            return '{\n' + ',\n'.join(items) + f'\n{pad}}}'
+        elif isinstance(v, np.ndarray):
+            return f'np.array({np.array2string(v, separator=", ", prefix=" " * indent)})'
+        elif isinstance(v, (list, tuple)):
+            inside = ', '.join(format_value(i, indent + 2) for i in v)
+            bracket = '[' if isinstance(v, list) else '('
+            close = ']' if isinstance(v, list) else ')'
+            return bracket + inside + close
+        else:
+            return repr(v)
 
     print("{")
     for k, v in result.items():
-        print(f"    {k}: {repr(v)},")
+        type_name = type(v).__name__
+        print(f'  {k} ({type_name}): {format_value(v, indent=4)},')
     print("}")
+

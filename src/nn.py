@@ -1,6 +1,12 @@
 import numpy as np
 from src.utils import print_array, print_vars
+from sklearn.metrics import log_loss as sk_log_loss
 #import matplotlib.pyplot as plt
+from decimal import Decimal, getcontext
+
+
+getcontext().prec = 50  # Define a precisão global
+
 
 n_input_l = 2
 n_hidden_l = 4
@@ -16,106 +22,57 @@ import numpy as np
 def initialize_parameters(show_print=False):
     np.random.seed(0)  # Fixar a aleatoriedade para reprodutibilidade
 
-    b1 = np.zeros((n_hidden_l, 1))
+    B1 = np.zeros((1, n_hidden_l))
 
-    W1 = np.random.randn(n_hidden_l, n_input_l) * 0.01
+    W1 = np.random.randn(n_input_l, n_hidden_l) * 0.01
 
-    b2 = np.zeros((n_output_l, 1))
+    B2 = np.zeros((1, n_output_l))
 
-    W2 = np.random.randn(n_output_l, n_hidden_l) * 0.01
-
-    # b1:
-    # +---+
-    # | 0 |
-    # +---+
-    # | 0 |
-    # +---+
-    # | 0 |
-    # +---+
-    # | 0 |
-    # +---+
-
-    # Each row (i) represents a neuron in the hidden layer.
-    # b1[i] corresponds to the bias added to the i-th hidden neuron before activation.
-    # Bias terms allow neurons to shift their activation independently of the input,
-    # enabling the network to model functions that do not necessarily pass through the origin.
-
-    # W1:
-    # +--------------+------------+
-    # |  0.01764052  |  0.00400157 |
-    # +--------------+------------+
-    # |  0.00978738  |  0.02240893 |
-    # +--------------+------------+
-    # |  0.01867558  | -0.00977278 |
-    # +--------------+------------+
-    # |  0.00950088  | -0.00151357 |
-    # +--------------+------------+
-
-    # W1 is the weight matrix connecting the input layer to the hidden layer.
-    # Each row (i) corresponds to a neuron in the hidden layer,
-    # and each column (j) corresponds to an input feature (x1, x2, etc.).
-    # Thus, W1[i][j] represents the weight applied to the j-th input feature for the i-th hidden neuron.
-    # These weights determine the influence of each input on each hidden neuron.
-
-    # b2:
-    # +---+
-    # | 0 |
-    # +---+
-
-    # b2 is the bias for the output neuron.
-    # Since there is only one output neuron, there is a single bias term.
-    # This bias is added to the weighted sum of hidden layer activations before applying the output activation function.
-
-    # W2:
-    # +------------+-------------+--------------+------------+
-    # | 0.00103219 | 0.00410599   | 0.00144044   | 0.01454274 |
-    # +------------+-------------+--------------+------------+
-
-    # W2 is the weight matrix connecting the hidden layer to the output layer.
-    # Each row corresponds to an output neuron (only one row in this case),
-    # and each column corresponds to a hidden neuron.
-    # Thus, W2[0][k] represents the weight applied to the activation output of the k-th hidden neuron
-    # when computing the final output.
-    # These weights allow the model to combine the learned features from the hidden layer to predict the final result.
+    W2 = np.random.randn(n_hidden_l, n_output_l) * 0.01
 
     if show_print == True:
-        # print("=== Inicialização dos Parâmetros ===\n")
-        # print_array(b1, 
-        #             ["Bias 1"], 
-        #             [f"[l1] Neuron {i + 1}" for i in range(n_hidden_l)], 
-        #             title_table="B1 | Bias - Layer 1",
-        #             title_columns="From (bias):",
-        #             title_rows="To:",
-        #             )
+        print("=== Inicialização dos Parâmetros ===\n")
 
-        print_array(W1, 
-                    [f"(X) Feature {i + 1}" for i in range(n_input_l)], 
-                    [f"[l1] Neuron {i + 1}" for i in range(n_hidden_l)], 
-                    title_table="W1 | Weights - Layer 1", 
-                    title_columns="From (inputs):",
-                    title_rows="To (neurons):", 
+        # B1: shape (1, n_hidden_l) → 1 linha, várias colunas (cada coluna é um neurônio da camada 1)
+        print_array(B1,
+                    [f"Neuron [1]{i + 1}" for i in range(n_hidden_l)],
+                    ["Bias 1"],
+                    title_table="B1 | Bias - Layer 1",
+                    title_columns="To (neurons [1])",
+                    title_rows="From (bias)",
                     )
 
-        # print_array(b2,
-        #             ["Bias 2"], 
-        #             [f"[l2] Neuron {i + 1}" for i in range(n_output_l)],
-        #             title_table="B2 | Bias - Layer 2 (hidden)",
-        #             title_columns="From:",
-        #             title_rows="To:", 
-        #             )
-        
-        print_array(W2, 
-                    [f"[l2] Neuron {i + 1}" for i in range(n_hidden_l)], 
-                    [f"[l2] Output {i + 1}" for i in range(n_output_l)],
-                    title_table="W2 | Weights - Layer 2 (hidden)", 
-                    title_columns="From (neurons):",
-                    title_rows="To (output):", 
+        # W1: shape (n_input_l, n_hidden_l) → cada linha é uma feature de entrada, cada coluna é um neurônio da camada 1
+        print_array(W1,
+                     [f"Neuron [1]{i + 1}" for i in range(n_hidden_l)],  # colunas = destino
+                    [f"Feature X{i + 1}" for i in range(n_input_l)],  # linhas = origem
+                    title_table="W1 | Weights - Layer 1",
+                    title_columns="To (neurons [1])",
+                    title_rows="From (features)",
+                    )
+
+        # B2: shape (1, n_output_l) → 1 linha, várias colunas (cada coluna é uma saída)
+        print_array(B2,
+                    [f"Neuron [2]{i + 1}" for i in range(n_output_l)],
+                    ["Bias 2"],
+                    title_table="B2 | Bias - Layer 2",
+                    title_columns="To (neurons [l2])",
+                    title_rows="From (bias)",
+                    )
+
+        # W2: shape (n_hidden_l, n_output_l) → cada linha = neurônio da camada oculta, cada coluna = saída
+        print_array(W2,
+                    [f"Neuron [2]{i + 1}" for i in range(n_output_l)],  # colunas = destino
+                    [f"[l1] Neuron {i + 1}" for i in range(n_hidden_l)],  # linhas = origem
+                    title_table="W2 | Weights - Layer 2",
+                    title_columns="To (neurons[2])",
+                    title_rows="From (neurons[1])",
                     )
 
     return {
-        "b1": b1, 
+        "B1": B1, 
         "W1": W1, 
-        "b2": b2, 
+        "B2": B2, 
         "W2": W2
     }
 
@@ -123,49 +80,18 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 def forward_propagation(parameters, x, show_print=False):
-    b1 = parameters["b1"]
+    B1 = parameters["B1"]
     W1 = parameters["W1"]
-    b2 = parameters["b2"]
+    B2 = parameters["B2"]
     W2 = parameters["W2"]
 
-    # First layer (input -> hidden)
-    Z1 = np.dot(W1, x) + b1
+    Z1 = np.dot(W1.T, x) + B1.T
 
-    # Activation from hidden layer
     A1 = sigmoid(Z1)
 
-    # Second layer (hidden -> output)
-    Z2 = np.dot(W2, A1) + b2
+    Z2 = np.dot(W2.T, A1) + B2.T
 
-    # Activation from output layer
     A2 = sigmoid(Z2)
-
-    # Z1:
-    # +--------------+
-    # |  value       |
-    # +--------------+
-    # Represents the pre-activation linear combination at the hidden layer
-    # before applying the non-linear activation function (sigmoid).
-
-    # A1:
-    # +--------------+
-    # | sigmoid(Z1)  |
-    # +--------------+
-    # Represents the output after applying the activation function
-    # for each hidden neuron.
-
-    # Z2:
-    # +--------------+
-    # |  value       |
-    # +--------------+
-    # Represents the pre-activation linear combination at the output layer
-    # before applying the final activation function (sigmoid).
-
-    # A2:
-    # +--------------+
-    # | sigmoid(Z2)  |
-    # +--------------+
-    # Represents the final prediction output (between 0 and 1).
 
     if show_print == True:
         print("\n=== Forward Propagation ===\n")
@@ -202,10 +128,9 @@ def forward_propagation(parameters, x, show_print=False):
         "A2": A2,
     }
 
-def gen_dataset_xor():
+def gen_dataset_xor(n):
     np.random.seed(0)
-    n = 500
-    
+
     X = np.random.rand(n, 2) * 2 - 1  # [-1, 1]
     Y = (X[:, 0] * X[:, 1] < 0).astype(int) # XOR
 
@@ -229,108 +154,175 @@ def log_loss(y, y_hat):
     # L(y,ŷ) = (y * log(ŷ)) + ((1-y) * log(1-ŷ))
     return -1 * (y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
 
-def back_propagation(log_loss_arr, X, Y, a1_arr, y_hat_arr, parameters):
+def back_propagation(parameters, X, Y, forward_cache, show_print=False):
 
-    def d_loss_d_yhat(y, y_hat):
-        # -(y - Ŷ) / (Ŷ * (1- Ŷ))
-        return (-1 * (y - y_hat)) / (y_hat * (1 - y_hat))
+    def d_loss_d_yhat(y: Decimal, y_hat: Decimal) -> Decimal:
+        return -((y / y_hat) - ((1 - y) / (1 - y_hat)))
 
-    def d_yhat_d_zL2(y_hat):
-        # Sigmoid: Ŷ * (1-Ŷ)
+    def d_yhat_d_z2(y_hat: Decimal) -> Decimal:
+        # Sigmoid derivative: ŷ * (1 - ŷ)
         return y_hat * (1 - y_hat)
 
-    def d_zL2_d_aL1(W2):
-        # W2
-        return W2
-
-    def d_aL1_d_zL1(aN):
-        # Sigmoid: An * (1 - An)
-        return aN * (1 - aN)
-
-    def d_zL1_d_wN(xN):
-        # xN
-        return xN
-
-    def layer_1_gradient_formula(x, aN, w2, y, y_hat):
-        gradient_formula_full = d_zL1_d_wN(x) * d_aL1_d_zL1(aN) * d_zL2_d_aL1(w2) * d_yhat_d_zL2(y_hat) * d_loss_d_yhat(y, y_hat)        
-        return gradient_formula_full
-
-    # Layer 1 -> Output
-
-    # Gradient descent [1]w1,1
-    # Gradient descent [1]w1,2
-
-    # Gradient descent [1]w2,1
-    # Gradient descent [1]w2,2
-
-    # Gradient descent [1]w3,1
-    # Gradient descent [1]w3,2
-
-    # Gradient descent [1]w4,1
-    # Gradient descent [1]w4,2
-
-    # Gradient descent [1]b1
-
-    def gradient_descent(log_loss, y_hat, x, y, parameters):
-        # First layer
-        for i in range(n_input_l):
-            for j in range(n_hidden_l):
-                w1 = parameters["W1"][j, i]
-                w2 = parameters["W2"][0][j]
-                a1 = a1_arr[0][j]
-                gradient = layer_1_gradient_formula(x, a1, w2, y, y_hat)
-                new_weight = w1 - (learning_rate * gradient)
-                print_vars(x, w1, a1, w2, y, y_hat, learning_rate, gradient, new_weight)
-                parameters["W1"][j, i] = new_weight
-                # print(new_weight)
-                # print(f"[l1]W{i},{j} = {W1[j, i]}")
-        
-        # Hidden layer
-        for i in range(n_hidden_l):
-            for j in range(n_output_l):
-                pass
-                # print(f"[l2]W{i},{j}")
-
-    gradient_descent(log_loss_arr[0], y_hat_arr[0], X[0][0], Y[0], parameters)
+    def d_z2_d_a1(w2: Decimal) -> Decimal:
+        return w2
     
+    def d_z2_d_w2(a1: Decimal) -> Decimal:
+        return a1
 
-    # Layer 2 -> Output
+    def d_a1_d_z1(a1: Decimal) -> Decimal:
+        # Sigmoid derivative: a1 * (1 - a1)
+        return a1 * (1 - a1)
 
-    # Gradient Descent [2]w1,1
-    # Gradient Descent [2]w2,1
-    # Gradient Descent [2]w3,1
-    # Gradient Descent [2]w4,1
-    pass
+    def d_z1_d_w1(x: Decimal) -> Decimal:
+        return x
+    
+    def d_z1_d_b1() -> Decimal:
+        return 1
 
+    def d_z2_d_b2() -> Decimal:
+        return 1
 
+    def w1_gradient_formula(x, a1, w2, y, y_hat):    
+        v__d_z1_d_w1 = d_z1_d_w1(x)
+        v__d_a1_d_z1 = d_a1_d_z1(a1)
+        v__d_z2_d_a1 = d_z2_d_a1(w2)
+        v__d_yhat_d_z2 = d_yhat_d_z2(y_hat)
+        v__d_loss_d_yhat = d_loss_d_yhat(y, y_hat)
+
+        gradient_formula_full = v__d_z1_d_w1 * v__d_a1_d_z1 * v__d_z2_d_a1 * v__d_yhat_d_z2 * v__d_loss_d_yhat
+
+        simple_formula = (-x) * (w2) * (a1) * (1 - a1) * (y - y_hat)
+        
+        # print_var(gradient_formula_full, simplified_formula)
+        assert np.isclose(gradient_formula_full, simple_formula), "Mismatch between forms!"
+
+        return gradient_formula_full
+    
+    def b1_gradient_formula(a1, w2, y, y_hat):    
+        v__d_z1_d_b1 = d_z1_d_b1()
+        v__d_a1_d_z1 = d_a1_d_z1(a1)
+        v__d_z2_d_a1 = d_z2_d_a1(w2)
+        v__d_yhat_d_z2 = d_yhat_d_z2(y_hat)
+        v__d_loss_d_yhat = d_loss_d_yhat(y, y_hat)
+
+        gradient_formula_full = v__d_z1_d_b1 * v__d_a1_d_z1 * v__d_z2_d_a1 * v__d_yhat_d_z2 * v__d_loss_d_yhat
+
+        simple_formula = (-w2) * (a1) * (1 - a1) * (y - y_hat)
+        
+        # print_var(gradient_formula_full, simplified_formula)
+        assert np.isclose(gradient_formula_full, simple_formula), "Mismatch between forms!"
+
+        return gradient_formula_full
+        
+    
+    def w2_gradient_formula(a1, y, y_hat):
+        dLoss_dYhat = d_loss_d_yhat(y, y_hat)
+        dYhat_dZ2 = d_yhat_d_z2(y_hat)
+        dZ2_dW2 = d_z2_d_w2(a1)
+
+        simple_formula = a1 * (-(y - y_hat))
+        gradient_formula_full = dZ2_dW2 * dYhat_dZ2 * dLoss_dYhat
+
+        # print_vars(simple_formula, gradient_formula_full)
+        assert np.isclose(gradient_formula_full, simple_formula), "Mismatch between forms!"
+        return gradient_formula_full
+    
+    def b2_gradient_formula(y, y_hat):
+        v__d_z2_d_b2 = d_z2_d_b2()
+        v__d_yhat_d_z2 = d_yhat_d_z2(y_hat)
+        v__d_loss_d_yhat = d_loss_d_yhat(y, y_hat)
+
+        gradient_formula_full = v__d_z2_d_b2 * v__d_yhat_d_z2 * v__d_loss_d_yhat
+        simple_formula = y - y_hat
+        assert np.isclose(gradient_formula_full, simple_formula), "Mismatch between forms!"
+        return gradient_formula_full
+                
+    
+    W1 = parameters["W1"]
+    B1 = parameters["B1"]
+    W2 = parameters["W2"]
+    B2 = parameters["B2"]
+
+    A1 = forward_cache["A1"]
+    Z1 = forward_cache["Z1"]
+    A2 = forward_cache["A2"]
+    Z2 = forward_cache["Z2"]
+
+    # W1
+    for i_input in range(n_input_l):
+        for j_neuron in range(n_hidden_l):
+            if show_print: print(f"W[1]{i_input},{j_neuron}")
+            x = X[i_input]
+            w1 = W1[i_input][j_neuron]
+            a1 = A1[j_neuron][0]
+            w2 = W2[j_neuron][0]
+            a2 = A2[0][0]
+
+            gradient = w1_gradient_formula(x, a1, w2, Y, a2)
+            new_w1 = w1 - (learning_rate * gradient)
+            W1[i_input][j_neuron] = new_w1
+            #print_vars(x, w1, a1, w2, a2, gradient, new_weight)
+
+    # B1
+    for i_neuron in range(n_hidden_l):
+        if show_print: print(f"B[1]{i_neuron}")
+        b1 = B1[0][i_neuron]
+        a1 = A1[i_neuron][0]
+        w2 = W2[i_neuron][0]
+        a2 = A2[0][0]
+
+        gradient = b1_gradient_formula(a1, w2, Y, a2)
+        new_b1 = b1 - (learning_rate * gradient)
+        B1[0][i_neuron] = new_b1
+        #print_vars(x, w1, a1, w2, a2, gradient, new_weight)
+    
+    # W2
+    for i_neuron in range(n_hidden_l):
+        for j_output in range(n_output_l):
+            if show_print: print(f"W[2]{i_neuron},{j_output}")
+            a1 = A1[i_neuron][0]
+            a2 = A2[0][0]
+            w2 = W2[i_neuron][0]
+            gradient = w2_gradient_formula(a1, Y, a2)
+            new_w2 = w2 - (learning_rate * gradient)
+            W2[i_neuron][j_output] = new_w2
+    
+    # B2
+    for i_output in range(n_output_l):
+        if show_print: print(f"B[2]{i_output}")
+        b2 = B2[0][i_output]
+        a2 = A2[0][0]
+        gradient = b2_gradient_formula(Y, a2)
+        new_b2 = b2 - (learning_rate * gradient)
+        B2[0][i_output] = new_b2
 
 def run():
-    parameters = initialize_parameters(True)
+    parameters = initialize_parameters(show_print=True)
 
-    X, Y = gen_dataset_xor()
+    X, Y = gen_dataset_xor(1)
 
-    results = [forward_propagation(parameters, np.array([[x[0]], [x[1]]]), show_print=False) for x in X]
+    for i in range(len(Y)):
+        # Features
+        x_selected = X[i]
 
-    y_hat_arr = np.array([r["A2"][0][0] for r in results])
+        # True output
+        y_selected = Y[i]
 
-    a1_arr = np.array([r["A1"].flatten() for r in results])
+        # Step 1 - Forward Propagation
+        forward_cache = forward_propagation(parameters, np.array([[x_selected[0]], [x_selected[1]]]), show_print=False)
 
-    log_loss_array = [
-        log_loss(y_item, y_hat_arr[i])
-        for i, y_item in enumerate(Y)
-    ]
+        y_hat = forward_cache["A2"][0][0]
+        
+        # Step 2 - Calculate cost (Log-Loss)
+        ll = log_loss(y_selected, y_hat)
 
-    back_propagation(log_loss_array, X, Y, a1_arr, y_hat_arr, parameters)
+        scilog = sk_log_loss(np.array([y_selected]), np.array([y_hat]), labels=[0, 1])
 
-    # print(f"X = {x_item}")
-    # print(f"Y = {y_item}")
-    # print(f"Ŷ = {y_hat[0][0]}")
-    # print(f"Log-loss = {log_loss(y_item, y_hat[0][0])}")
-
-    # print(X.shape)
-    # print(Y.shape)
-    # print(Y[0])
-    # print(X[0])
+        # print_vars(ll, scilog)
+        assert np.isclose(ll, scilog), "Mismatch log-loss values!"
+        
+        # 3 - Back propagation & update parameters
+        back_propagation(parameters, x_selected, y_selected, forward_cache, show_print=True)
 
 
 run()

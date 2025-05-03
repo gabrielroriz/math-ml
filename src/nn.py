@@ -84,6 +84,34 @@ def initialize_parameters(show_print=False):
         
     return parameters
 
+def initialize_parameters_fixed(show_print=False):
+    B1 = np.array([[-3.9686972729406733, 
+                    3.616801466722483, 
+                    -3.963258397115321, 
+                    -4.188478200079775]])
+
+    W1 = np.array([[6.845696558372827,   6.163896748126158,  -6.762078570871174,  7.5943138515861435],
+                   [6.752729189010516,  -6.6118234805183125, -7.258583045498932, -7.022057369035268]])
+
+    B2 = np.array([[19.289751171239327]])
+
+    W2 = np.array([[-19.66074984961242],
+                   [-19.64813378916913],
+                   [-18.496934206613314],
+                   [19.142335549306]])
+
+    parameters = {
+        "B1": B1,
+        "W1": W1,
+        "B2": B2,
+        "W2": W2
+    }
+
+    if show_print:
+        print_parameters(parameters)
+        
+    return parameters
+
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
@@ -322,13 +350,14 @@ def predict(parameters, x_input, threshold=0.5, show_print=False):
     return y_hat, predicted_class
 
 def run():
-    parameters = initialize_parameters(show_print=True)
-    epochs = 100  # pode começar com 500 e ajustar depois
 
+    parameters = initialize_parameters(show_print=True)
+
+    epochs = 100
 
     X, Y = gen_dataset_xor(2000)
 
-    for epoch in range(epochs):
+    for _ in range(epochs):
         for i in range(len(Y)):
             # Features
             x_selected = X[i]
@@ -363,4 +392,41 @@ def run():
     print(f"Input: [1, -1] -> y_hat: {y_hat:.5f}, Predição: {prediction}")
 
 
-run()
+def run_predict():
+    parameters = initialize_parameters_fixed(show_print=True)
+
+    print("\n=== Predição ===\n")
+
+    test_inputs = [
+        [1.0, -1.0],   # XOR → 1
+        [0.0, 0.0],    # → 0
+        [1.0, 1.0],    # → 0
+        [-1.0, -1.0],  # → 0
+        [0.5, -0.5],   # → 1
+        [-0.5, 0.5],   # → 1
+        [0.9, -0.9],   # → 1
+        [-0.9, 0.9],   # → 1
+        [1.0, 0.0],    # → 1
+        [0.0, 1.0],    # → 1
+        [-1.0, 0.0],   # → 1
+        [0.0, -1.0],   # → 1
+        [0.2, 0.2],    # → 0
+        [-0.2, -0.2],  # → 0
+        [0.7, -0.7],   # → 1
+        [-0.7, 0.7],   # → 1
+        [0.8, 0.8],    # → 0
+        [-0.8, -0.8],  # → 0
+        [1.0, -0.8],   # → 1
+        [-1.0, 0.8],   # → 1
+        [0.3, -0.3],   # → 1
+        [0.1, 1],   # → 0
+    ]
+
+    for i, (x1, x2) in enumerate(test_inputs):
+        x_test = np.array([[x1], [x2]])
+        y_hat, prediction = predict(parameters, x_test, show_print=False)
+        print(f"#{i+1:02d} | Input: [{x1:>5}, {x2:>5}] -> y_hat: {y_hat:.5f} | Predição: {prediction}")
+
+
+#run()
+run_predict()

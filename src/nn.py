@@ -1,7 +1,7 @@
 import numpy as np
 from src.utils import print_array, print_vars
 from sklearn.metrics import log_loss as sk_log_loss
-#import matplotlib.pyplot as plt
+
 from decimal import Decimal, getcontext
 
 
@@ -17,7 +17,50 @@ learning_rate = 0.1
 def sigmoid(z):
     return 1 / (1 + (np.e ** -z))
 
-import numpy as np
+
+def print_parameters(parameters):
+    B1 = parameters["B1"]
+    W1 = parameters["W1"]
+    B2 = parameters["B2"]
+    W2 = parameters["W2"]
+
+    print("=== Inicialização dos Parâmetros ===\n")
+
+    # B1: shape (1, n_hidden_l) → 1 linha, várias colunas (cada coluna é um neurônio da camada 1)
+    print_array(B1,
+                [f"Neuron [1]{i + 1}" for i in range(n_hidden_l)],
+                ["Bias 1"],
+                title_table="B1 | Bias - Layer 1",
+                title_columns="To (neurons [1])",
+                title_rows="From (bias)",
+                )
+
+    # W1: shape (n_input_l, n_hidden_l) → cada linha é uma feature de entrada, cada coluna é um neurônio da camada 1
+    print_array(W1,
+                [f"Neuron [1]{i + 1}" for i in range(n_hidden_l)],  # colunas = destino
+                [f"Feature X{i + 1}" for i in range(n_input_l)],  # linhas = origem
+                title_table="W1 | Weights - Layer 1",
+                title_columns="To (neurons [1])",
+                title_rows="From (features)",
+                )
+
+    # B2: shape (1, n_output_l) → 1 linha, várias colunas (cada coluna é uma saída)
+    print_array(B2,
+                [f"Neuron [2]{i + 1}" for i in range(n_output_l)],
+                ["Bias 2"],
+                title_table="B2 | Bias - Layer 2",
+                title_columns="To (neurons [l2])",
+                title_rows="From (bias)",
+                )
+
+    # W2: shape (n_hidden_l, n_output_l) → cada linha = neurônio da camada oculta, cada coluna = saída
+    print_array(W2,
+                [f"Neuron [2]{i + 1}" for i in range(n_output_l)],  # colunas = destino
+                [f"[l1] Neuron {i + 1}" for i in range(n_hidden_l)],  # linhas = origem
+                title_table="W2 | Weights - Layer 2",
+                title_columns="To (neurons[2])",
+                title_rows="From (neurons[1])",
+                )
 
 def initialize_parameters(show_print=False):
     np.random.seed(0)  # Fixar a aleatoriedade para reprodutibilidade
@@ -30,51 +73,16 @@ def initialize_parameters(show_print=False):
 
     W2 = np.random.randn(n_hidden_l, n_output_l) * 0.01
 
-    if show_print == True:
-        print("=== Inicialização dos Parâmetros ===\n")
-
-        # B1: shape (1, n_hidden_l) → 1 linha, várias colunas (cada coluna é um neurônio da camada 1)
-        print_array(B1,
-                    [f"Neuron [1]{i + 1}" for i in range(n_hidden_l)],
-                    ["Bias 1"],
-                    title_table="B1 | Bias - Layer 1",
-                    title_columns="To (neurons [1])",
-                    title_rows="From (bias)",
-                    )
-
-        # W1: shape (n_input_l, n_hidden_l) → cada linha é uma feature de entrada, cada coluna é um neurônio da camada 1
-        print_array(W1,
-                     [f"Neuron [1]{i + 1}" for i in range(n_hidden_l)],  # colunas = destino
-                    [f"Feature X{i + 1}" for i in range(n_input_l)],  # linhas = origem
-                    title_table="W1 | Weights - Layer 1",
-                    title_columns="To (neurons [1])",
-                    title_rows="From (features)",
-                    )
-
-        # B2: shape (1, n_output_l) → 1 linha, várias colunas (cada coluna é uma saída)
-        print_array(B2,
-                    [f"Neuron [2]{i + 1}" for i in range(n_output_l)],
-                    ["Bias 2"],
-                    title_table="B2 | Bias - Layer 2",
-                    title_columns="To (neurons [l2])",
-                    title_rows="From (bias)",
-                    )
-
-        # W2: shape (n_hidden_l, n_output_l) → cada linha = neurônio da camada oculta, cada coluna = saída
-        print_array(W2,
-                    [f"Neuron [2]{i + 1}" for i in range(n_output_l)],  # colunas = destino
-                    [f"[l1] Neuron {i + 1}" for i in range(n_hidden_l)],  # linhas = origem
-                    title_table="W2 | Weights - Layer 2",
-                    title_columns="To (neurons[2])",
-                    title_rows="From (neurons[1])",
-                    )
-
-    return {
+    parameters = {
         "B1": B1, 
         "W1": W1, 
         "B2": B2, 
         "W2": W2
     }
+
+    if show_print == True: print_parameters(parameters)
+        
+    return parameters
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
@@ -128,25 +136,28 @@ def forward_propagation(parameters, x, show_print=False):
         "A2": A2,
     }
 
-def gen_dataset_xor(n):
+
+import matplotlib.pyplot as plt
+
+def gen_dataset_xor(n, ploting=False):
     np.random.seed(0)
 
     X = np.random.rand(n, 2) * 2 - 1  # [-1, 1]
     Y = (X[:, 0] * X[:, 1] < 0).astype(int) # XOR
 
     # Ploting
-
-    # class_0 = X[Y == 0]
-    # class_1 = X[Y == 1]
-    # plt.figure(figsize=(8, 6))
-    # plt.scatter(class_0[:, 0], class_0[:, 1], color='blue', label='Classe 0')
-    # plt.scatter(class_1[:, 0], class_1[:, 1], color='red', label='Classe 1')
-    # plt.title('Distribuição dos dados XOR com ruído')
-    # plt.xlabel('Feature 1')
-    # plt.ylabel('Feature 2')
-    # plt.legend()
-    # plt.grid(True)
-    # plt.show()
+    if ploting:
+        class_0 = X[Y == 0]
+        class_1 = X[Y == 1]
+        plt.figure(figsize=(8, 6))
+        plt.scatter(class_0[:, 0], class_0[:, 1], color='blue', label='Classe 0')
+        plt.scatter(class_1[:, 0], class_1[:, 1], color='red', label='Classe 1')
+        plt.title('Distribuição dos dados XOR com ruído')
+        plt.xlabel('Feature 1')
+        plt.ylabel('Feature 2')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
     return X, Y
 
@@ -228,14 +239,13 @@ def back_propagation(parameters, X, Y, forward_cache, show_print=False):
         return gradient_formula_full
     
     def b2_gradient_formula(y, y_hat):
-        v__d_z2_d_b2 = d_z2_d_b2()
-        v__d_yhat_d_z2 = d_yhat_d_z2(y_hat)
-        v__d_loss_d_yhat = d_loss_d_yhat(y, y_hat)
+        dLoss_dYhat = d_loss_d_yhat(y, y_hat)           # derivada da log-loss
+        dYhat_dZ2 = d_yhat_d_z2(y_hat)                  # derivada da sigmoid
+        dZ2_dB2 = d_z2_d_b2()                            # constante: 1
 
-        gradient_formula_full = v__d_z2_d_b2 * v__d_yhat_d_z2 * v__d_loss_d_yhat
-        simple_formula = y - y_hat
-        assert np.isclose(gradient_formula_full, simple_formula), "Mismatch between forms!"
-        return gradient_formula_full
+        gradient = dLoss_dYhat * dYhat_dZ2 * dZ2_dB2     # produto da cadeia
+
+        return gradient
                 
     
     W1 = parameters["W1"]
@@ -296,33 +306,61 @@ def back_propagation(parameters, X, Y, forward_cache, show_print=False):
         new_b2 = b2 - (learning_rate * gradient)
         B2[0][i_output] = new_b2
 
+def predict(parameters, x_input, threshold=0.5, show_print=False):
+    # Converte para coluna se estiver em linha
+    if x_input.ndim == 1:
+        x_input = x_input.reshape(-1, 1)
+
+    forward_cache = forward_propagation(parameters, x_input, show_print=show_print)
+    y_hat = forward_cache["A2"][0][0]
+
+    predicted_class = int(y_hat >= threshold)
+
+    if show_print:
+        print_vars(x_input, y_hat, predicted_class)
+
+    return y_hat, predicted_class
+
 def run():
     parameters = initialize_parameters(show_print=True)
+    epochs = 100  # pode começar com 500 e ajustar depois
 
-    X, Y = gen_dataset_xor(1)
 
-    for i in range(len(Y)):
-        # Features
-        x_selected = X[i]
+    X, Y = gen_dataset_xor(2000)
 
-        # True output
-        y_selected = Y[i]
+    for epoch in range(epochs):
+        for i in range(len(Y)):
+            # Features
+            x_selected = X[i]
 
-        # Step 1 - Forward Propagation
-        forward_cache = forward_propagation(parameters, np.array([[x_selected[0]], [x_selected[1]]]), show_print=False)
+            # True output
+            y_selected = Y[i]
 
-        y_hat = forward_cache["A2"][0][0]
-        
-        # Step 2 - Calculate cost (Log-Loss)
-        ll = log_loss(y_selected, y_hat)
+            # Step 1 - Forward Propagation
+            forward_cache = forward_propagation(parameters, np.array([[x_selected[0]], [x_selected[1]]]), show_print=False)
 
-        scilog = sk_log_loss(np.array([y_selected]), np.array([y_hat]), labels=[0, 1])
+            y_hat = forward_cache["A2"][0][0]
+            
+            # Step 2 - Calculate cost (Log-Loss)
+            ll = log_loss(y_selected, y_hat)
 
-        # print_vars(ll, scilog)
-        assert np.isclose(ll, scilog), "Mismatch log-loss values!"
-        
-        # 3 - Back propagation & update parameters
-        back_propagation(parameters, x_selected, y_selected, forward_cache, show_print=True)
+            scilog = sk_log_loss(np.array([y_selected]), np.array([y_hat]), labels=[0, 1])
+
+            # print_vars(ll, scilog)
+            assert np.isclose(ll, scilog), "Mismatch log-loss values!"
+            
+            # 3 - Back propagation + update parameters
+            back_propagation(parameters, x_selected, y_selected, forward_cache, show_print=True)
+
+    print_parameters(parameters)
+
+    print("\n=== Predição ===\n")
+
+    # Vamos testar a entrada [1, -1], que deve dar classe 1 no XOR
+    x_test = np.array([[1.0], [-1.0]])
+    y_hat, prediction = predict(parameters, x_test, show_print=True)
+
+    print(f"Input: [1, -1] -> y_hat: {y_hat:.5f}, Predição: {prediction}")
 
 
 run()

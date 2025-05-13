@@ -267,11 +267,11 @@ def back_propagation(parameters, X, Y, forward_cache, show_print=False):
         return gradient_formula_full
     
     def b2_gradient_formula(y, y_hat):
-        dLoss_dYhat = d_loss_d_yhat(y, y_hat)           # derivada da log-loss
-        dYhat_dZ2 = d_yhat_d_z2(y_hat)                  # derivada da sigmoid
-        dZ2_dB2 = d_z2_d_b2()                            # constante: 1
+        dLoss_dYhat = d_loss_d_yhat(y, y_hat) # derivada da log-loss
+        dYhat_dZ2 = d_yhat_d_z2(y_hat)        # derivada da sigmoid
+        dZ2_dB2 = d_z2_d_b2()                 # constante: 1
 
-        gradient = dLoss_dYhat * dYhat_dZ2 * dZ2_dB2     # produto da cadeia
+        gradient = dLoss_dYhat * dYhat_dZ2 * dZ2_dB2
 
         return gradient
                 
